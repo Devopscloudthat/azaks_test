@@ -1,0 +1,36 @@
+pool:
+  name: Hosted Ubuntu 1604
+  demands: npm
+
+steps:
+- task: Npm@1
+  displayName: 'npm install'
+  inputs:
+    verbose: false
+
+- task: qetza.replacetokens.replacetokens-task.replacetokens@3
+  displayName: 'Replace tokens in node.yaml'
+  inputs:
+    targetFiles: node.yaml
+
+- task: Docker@0
+  displayName: build
+  inputs:
+    azureSubscription: 'Visual Studio Enterprise – MPN (c5c202a5-4cd7-4eae-8533-85840180bc80)'
+    azureContainerRegistry: '{"loginServer":"ctdevopsregistry.azurecr.io", "id" : "/subscriptions/c5c202a5-4cd7-4eae-8533-85840180bc80/resourceGroups/aksdevops/providers/Microsoft.ContainerRegistry/registries/ctdevopsregistry"}'
+
+- task: Docker@0
+  displayName: push
+  inputs:
+    azureSubscription: 'Visual Studio Enterprise – MPN (c5c202a5-4cd7-4eae-8533-85840180bc80)'
+    azureContainerRegistry: '{"loginServer":"ctdevopsregistry.azurecr.io", "id" : "/subscriptions/c5c202a5-4cd7-4eae-8533-85840180bc80/resourceGroups/aksdevops/providers/Microsoft.ContainerRegistry/registries/ctdevopsregistry"}'
+    action: 'Push an image'
+
+- task: CopyFiles@2
+  displayName: 'Copy yaml'
+  inputs:
+    Contents: '$(Build.SourcesDirectory)/node.yaml'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: drop'
